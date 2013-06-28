@@ -47,20 +47,21 @@
         prefixFromNow: null,
         suffixAgo: "ago",
         suffixFromNow: "from now",
-        seconds: "less than a minute",
-        minute: "about a minute",
+        seconds: "less than 1 minute",
+        minute: "1 minute",
         minutes: "%d minutes",
-        hour: "about an hour",
-        hours: "about %d hours",
+        hour: "1 hour",
+        hours: "%d hours",
         day: "a day",
         days: "%d days",
-        month: "about a month",
+        month: "1 month",
         months: "%d months",
-        year: "about a year",
+        year: "1 year",
         years: "%d years",
         wordSeparator: " ",
         numbers: []
-      }
+      },
+      defaultDatTime: false
     },
     inWords: function(distanceMillis) {
       var $l = this.settings.strings;
@@ -71,6 +72,9 @@
           prefix = $l.prefixFromNow;
           suffix = $l.suffixFromNow;
         }
+      }
+      if(distanceMillis == 0){
+          return;
       }
 
       var seconds = Math.abs(distanceMillis) / 1000;
@@ -123,13 +127,19 @@
   // init is default when no action is given
   // functions are called with context of a single element
   var functions = {
-    init: function(){
+    init: function(options){
+        if(typeof(options) != 'undefined'){
+            var strings = $.extend($t.settings.strings, options.strings);
+            $.extend(options.strings, strings);
+        }
+        $.extend($t.settings, options);
       var refresh_el = $.proxy(refresh, this);
       refresh_el();
       var $s = $t.settings;
       if ($s.refreshMillis > 0) {
         setInterval(refresh_el, $s.refreshMillis);
       }
+
     },
     update: function(time){
       $(this).data('timeago', { datetime: $t.parse(time) });
@@ -141,7 +151,7 @@
     }
   };
 
-  $.fn.timeago = function(action, options) {
+  $.fn.timeago = function(options, action) {
     var fn = action ? functions[action] : functions.init;
     if(!fn){
       throw new Error("Unknown function name '"+ action +"' for timeago");
@@ -184,7 +194,11 @@
   }
 
   function distance(date) {
-    return (new Date().getTime() - date.getTime());
+      var startDate = new Date().getTime();
+      if($t.settings.defaultDatTime != false){
+          startDate = $t.parse($t.settings.defaultDatTime).getTime();
+      }
+    return (startDate - date.getTime());
   }
 
   // fix for IE6 suckage
